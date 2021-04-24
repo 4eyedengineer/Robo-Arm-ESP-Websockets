@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <style>
+        div {
+            padding: 20px;
+            border: 2px solid;
+        }
+
+        .box {
+            margin-left: auto;
+            margin-right: auto;
+            width: 300px;
+            padding: 20px;
+            border: 2px solid gray;
+        }
+        input {
+            width: 100%;
+        }
+      </style>
+    </head>
+    <body>
+        <h1 style="margin: auto;width: 200px;">Control Me</h1>
+        <div class="box">
+            Control Arm: X axis
+            <input oninput="armXChange(this.value)" type="range" min="0" max="100" value="50" class="" id="arm-x">
+        </div>
+        <div class="box">
+            Control Arm: Y axis
+            <input oninput="armXChange(this.value)" type="range" min="0" max="100" value="50" class="" id="arm-y">
+        </div>
+        <div class="box">
+            Control Arm: Z axis
+            <input oninput="armXChange(this.value)" type="range" min="0" max="100" value="50" class="" id="arm-z">
+        </div>
+
+        <script>
+            var ws;
+            function connWs() {
+                ws = new WebSocket(`ws://${document.location.host}:81`);
+                ws.onmessage = (m => {
+                    console.log(m);
+                })
+            }
+            function armXChange(v) {
+                console.log(v);
+                ws.send(`${v}`);
+            }
+            (function x(){connWs()})();
+        </script>
+    </body>
+</html>
