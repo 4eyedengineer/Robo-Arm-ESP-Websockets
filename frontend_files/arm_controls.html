@@ -1,37 +1,46 @@
 <!DOCTYPE html>
 <html>
     <head>
-      <style>
-        div {
-            padding: 20px;
-            border: 2px solid;
-        }
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            div {
+                padding: 20px;
+                border: 2px solid;
+            }
 
-        .box {
-            margin-left: auto;
-            margin-right: auto;
-            width: 300px;
-            padding: 20px;
-            border: 2px solid gray;
-        }
-        input {
-            width: 100%;
-        }
-      </style>
+            .box {
+                margin-left: auto;
+                margin-right: auto;
+                width: 300px;
+                padding: 20px;
+                border: 2px solid gray;
+            }
+            input {
+                width: 100%;
+            }
+            input[type='range']::-webkit-slider-thumb {
+                width: 50px;
+                -webkit-appearance: none;
+                height: 50px;
+                cursor: ew-resize;
+                background: #434343;
+            }
+
+        </style>
     </head>
     <body>
         <h1 style="margin: auto;width: 200px;">Control Me</h1>
         <div class="box">
             Control Arm: X axis
-            <input oninput="armXChange(this.value)" type="range" min="0" max="100" value="50" class="" id="arm-x">
+            <input oninput="armChange(this.value, 'x')" type="range" min="0" max="180" value="90" class="" id="arm-x">
         </div>
         <div class="box">
             Control Arm: Y axis
-            <input oninput="armXChange(this.value)" type="range" min="0" max="100" value="50" class="" id="arm-y">
+            <input oninput="armChange(this.value, 'y')" type="range" min="0" max="180" value="90" class="" id="arm-y">
         </div>
         <div class="box">
             Control Arm: Z axis
-            <input oninput="armXChange(this.value)" type="range" min="0" max="100" value="50" class="" id="arm-z">
+            <input oninput="armChange(this.value, 'z')" type="range" min="0" max="180" value="90" class="" id="arm-z">
         </div>
 
         <script>
@@ -42,9 +51,10 @@
                     console.log(m);
                 })
             }
-            function armXChange(v) {
-                console.log(v);
-                ws.send(`${v}`);
+            function armChange(v, axis) {
+                const obj = {};
+                obj[axis] = v;
+                ws.send(JSON.stringify(obj));
             }
             (function x(){connWs()})();
         </script>
