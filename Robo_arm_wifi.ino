@@ -23,8 +23,9 @@ WebSocketsServer webSocket(81);
 ESP8266WebServer server(80);
 DNSServer dnsServer;
 
-Servo myservo; // need mutliple
-
+Servo servoX;
+Servo servoY;
+Servo servoZ;
 
 void setup()
 {
@@ -55,7 +56,9 @@ void setup()
 
   // setup servos
   delay(100);
-  myservo.attach(15);
+  servoX.attach(15);
+  servoY.attach(14);
+  servoZ.attach(2);
 }
 
 void loop()
@@ -84,26 +87,35 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
     case WStype_TEXT:                     // if new text data is received
       Serial.printf("[%u] get Text: %s\n", num, payload);
       jsonParse(servoStates, (char*)payload);
-      myservo.write(convertToInt(payload));
+      const char* x = servoStates["x"];
+      const char* y = servoStates["y"];
+      const char* z = servoStates["z"];
+
+      servoX.write(atoi(x));
+      servoY.write(atoi(y));
+      servoZ.write(atoi(z));
       break;
   }
 }
 
-int convertToInt(uint8_t * payload){
-  String str="";
-  char c;
-  for(int i=0;i<4;i++)
-      if (isDigit(c=(char)(*(payload+i))))
-          str += c;
-  Serial.println("converted string: " + str +"\n");
-  int Val =str.toInt();
-  Serial.printf("converted int: %d\n", Val);
-  return Val>1023?1023:Val;
-}
+//int convertToInt(uint8_t * payload){
+//  String str="";
+//  char c;
+//  for(int i=0;i<5;i++) {
+//      Serial.println("char eval: \n");
+//      Serial.print((char)(*(payload+i)));
+//      if (isDigit(c=(char)(*(payload+i))))
+//          str += c;
+//  }
+//  Serial.println("converted string: " + str +"\n");
+//  int Val =str.toInt();
+//  Serial.printf("converted int: %d\n", Val);
+//  return Val>1023?1023:Val;
+//}
 
 void handle_OnConnect() {
   Serial.println("Client Request");
-  server.send(200, "text/html", F("<!DOCTYPE html><html> <head> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> <style>div{padding: 20px; border: 2px solid;}.box{margin-left: auto; margin-right: auto; width: 300px; padding: 20px; border: 2px solid gray;}input{width: 100%;}input[type='range']::-webkit-slider-thumb{width: 25px; -webkit-appearance: none; height: 25px; cursor: ew-resize; background: #434343;}</style> </head> <body> <h1 style=\"margin: auto;width: 200px;\">Control Me</h1> <div class=\"box\"> Control Arm: X axis <input oninput=\"armChange(this.value, 'x')\" type=\"range\" min=\"0\" max=\"180\" value=\"90\" class=\"\" id=\"arm-x\"> </div><div class=\"box\"> Control Arm: Y axis <input oninput=\"armChange(this.value, 'y')\" type=\"range\" min=\"0\" max=\"180\" value=\"90\" class=\"\" id=\"arm-y\"> </div><div class=\"box\"> Control Arm: Z axis <input oninput=\"armChange(this.value, 'z')\" type=\"range\" min=\"0\" max=\"180\" value=\"90\" class=\"\" id=\"arm-z\"> </div><script>var ws; function connWs(){ws=new WebSocket(`ws://${document.location.host}:81`); ws.onmessage=(m=>{console.log(m);})}function armChange(v, axis){const obj={}; obj[axis]=v; ws.send(JSON.stringify(obj));}(function x(){connWs()})(); </script> </body></html>"));
+  server.send(200, "text/html", F("<!DOCTYPE html><html> <head> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/> <style>div{padding: 20px; border: 2px solid;}.box{margin-left: auto; margin-right: auto; width: 300px; padding: 20px; border: 2px solid gray;}input{width: 100%;}input[type=\"range\"]::-webkit-slider-thumb{width: 25px; -webkit-appearance: none; height: 25px; cursor: ew-resize; background: #434343;}</style> </head> <body> <h1 style=\"margin: auto; width: 200px\">Control Me</h1> <div class=\"box\"> Control Arm: X axis <input oninput=\"armChange(this.value, 'x')\" type=\"range\" min=\"0\" max=\"180\" value=\"90\" class=\"\" id=\"arm-x\"/> </div><div class=\"box\"> Control Arm: Y axis <input oninput=\"armChange(this.value, 'y')\" type=\"range\" min=\"0\" max=\"180\" value=\"90\" class=\"\" id=\"arm-y\"/> </div><div class=\"box\"> Control Arm: Z axis <input oninput=\"armChange(this.value, 'z')\" type=\"range\" min=\"0\" max=\"180\" value=\"90\" class=\"\" id=\"arm-z\"/> </div><script>let ws; const positions={x: \"90\", y: \"90\", z: \"90\"}; function init(){document.getElementById(\"arm-x\").value=positions.x; document.getElementById(\"arm-y\").value=positions.y; document.getElementById(\"arm-z\").value=positions.z;}function connWs(){ws=new WebSocket(`ws://${document.location.host}:81`); ws.onmessage=(m)=>{console.log(m);};}function armChange(v, axis){positions[axis]=v; ws.send(JSON.stringify(positions));}(function x(){init(); connWs();})(); </script> </body></html>"));
 }
 
 void handle_getPositions() {
@@ -156,7 +168,7 @@ void handle_NotFound(){
 // JSON helper functions
 void jsonParse(JsonDocument& doc, char* json) {
   DeserializationError error = deserializeJson(doc, json);
-  
+
   // Test if parsing succeeds.
   if (error) {
     Serial.print(F("deserializeJson() failed: "));
